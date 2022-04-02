@@ -44,13 +44,9 @@ class LoginActivity : AppCompatActivity() {
         user.signUpInBackground { e ->
             if (e == null) {
                 // User has successfully created an account
-
-                // TODO: Navigate the user to the MainActivity
-                // TODO: Show a toast to indicate user successfully signed up for an account
                 Toast.makeText(this, "Sign In Successful", Toast.LENGTH_SHORT).show()
                 goToMainActivity()
             } else {
-                // TODO: Show a toast to tell user signup was not successful
                 Toast.makeText(this, "Sign In Failed, Try Again", Toast.LENGTH_SHORT).show()
             }
         }

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.parstagram.MainActivity
 import com.example.parstagram.Post
 import com.example.parstagram.PostAdapter
@@ -16,13 +17,15 @@ import com.parse.FindCallback
 import com.parse.ParseException
 import com.parse.ParseQuery
 
-class FeedFragment : Fragment() {
+open class FeedFragment : Fragment() {
 
     lateinit var postsRecyclerView: RecyclerView
 
     lateinit var adapter: PostAdapter
 
     var allPosts: MutableList<Post> = mutableListOf()
+
+    lateinit var swipeContainer: SwipeRefreshLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,6 +42,8 @@ class FeedFragment : Fragment() {
 
         postsRecyclerView = view.findViewById(R.id.postRecyclerView)
 
+        swipeContainer = view.findViewById(R.id.swipeContainer)
+
         //Steps to populate RecyclerView
         // 1. Create layout for each row in list(item_post.xml)
         // 2. Create data source for each row(this is the Post class)
@@ -51,13 +56,14 @@ class FeedFragment : Fragment() {
         postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         queryPosts()
+
     }
 
     // Query all posts in our server
-    fun queryPosts() {
+    open fun queryPosts() {
 
         // Specify which class to query
-        val query: ParseQuery<Post> = ParseQuery.getQuery(Post:: class.java)
+        val query: ParseQuery<Post> = ParseQuery.getQuery(Post::class.java)
         // Find all the Post Objects
         query.include(Post.KEY_USER)
 
@@ -66,22 +72,34 @@ class FeedFragment : Fragment() {
 
         // Only return the most recent 20 posts
         query.findInBackground(object : FindCallback<Post> {
-            override fun done(posts: MutableList<Post>?, e: ParseException?) {
+            override fun done(posts: MutableList<Post>, e: ParseException?) {
                 if (e != null) {
                     Log.e(MainActivity.TAG, "Error fetching posts")
-                }else {
+                } else {
                     if (posts != null) {
                         for (post in posts) {
-                            Log.i(MainActivity.TAG, "Post: " + post.getDescription() + " , username: " + post.getUser()?.username)
+                            Log.i(
+                                MainActivity.TAG,
+                                "Post: " + post.getDescription() + " , username: " + post.getUser()?.username
+                            )
                         }
                         allPosts.addAll(posts)
                         adapter.notifyDataSetChanged()
                     }
                 }
-            }
 
+                swipeContainer.setOnRefreshListener {
+                    // Your code to refresh the list here.
+                    allPosts.clear()
+                    allPosts.addAll(posts)
+                    adapter.notifyDataSetChanged()
+
+                    swipeContainer.setRefreshing(false)
+                }
+            }
         })
     }
+
 
     companion object {
         const val TAG = "FeedFragment"
